@@ -28,7 +28,9 @@ public class SipConfig {
 
     @Bean
     public SipFactory sipFactory() {
-        return SipFactory.getInstance();
+        SipFactory factory = SipFactory.getInstance();
+        factory.setPathName("gov.nist");
+        return factory;
     }
 
     @Bean
@@ -51,6 +53,7 @@ public class SipConfig {
         Properties properties = new Properties();
         properties.setProperty("javax.sip.STACK_NAME", "GB28181-SIP-Stack");
         properties.setProperty("javax.sip.IP_ADDRESS", gb28181Properties.getSip().getIp());
+        properties.setProperty("javax.sip.OUTBOUND_PROXY", gb28181Properties.getSip().getIp() + ":" + gb28181Properties.getSip().getPort() + "/" + gb28181Properties.getSip().getTransport());
         properties.setProperty("gov.nist.javax.sip.TRACE_LEVEL", "32");
         properties.setProperty("gov.nist.javax.sip.SERVER_LOG", "logs/sip_server.log");
         properties.setProperty("gov.nist.javax.sip.DEBUG_LOG", "logs/sip_debug.log");
