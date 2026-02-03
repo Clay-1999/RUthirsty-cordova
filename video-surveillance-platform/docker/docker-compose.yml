@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: video-surveillance-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: video_surveillance
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    networks:
+      - video-surveillance-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: video-surveillance-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - video-surveillance-network
+
+  # ZLMediaKit Media Server
+  zlmediakit:
+    image: zlmediakit/zlmediakit:master
+    container_name: video-surveillance-zlmediakit
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "8088:80"         # HTTP API (changed to 8088 to avoid conflict)
+      - "443:443"         # HTTPS
+      - "554:554"         # RTSP
+      - "1935:1935"       # RTMP
+      - "8000:8000"       # WebRTC
+      - "10000:10000"     # RTP Proxy
+      - "30000-30500:30000-30500/udp"  # RTP ports for GB28181
+    volumes:
+      - zlmediakit-data:/opt/media
+    networks:
+      - video-surveillance-network
+
+  # Spring Boot Application (optional - can run locally)
+  # app:
+  #   build:
+  #     context: ./video-surveillance-platform
+  #     dockerfile: Dockerfile
+  #   container_name: video-surveillance-app
+  #   restart: always
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=prod
+  #     - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/video_surveillance?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+  #     - SPRING_REDIS_HOST=redis
+  #     - ZLMEDIAKIT_IP=zlmediakit
+  #   ports:
+  #     - "8080:8080"
+  #     - "5060:5060/udp"  # SIP port
+  #   depends_on:
+  #     - mysql
+  #     - redis
+  #     - zlmediakit
+  #   networks:
+  #     - video-surveillance-network
+
+volumes:
+  mysql-data:
+  redis-data:
+  zlmediakit-data:
+
+networks:
+  video-surveillance-network:
+    driver: bridge

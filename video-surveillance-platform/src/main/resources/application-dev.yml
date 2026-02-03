@@ -1,0 +1,17 @@
+# Development Environment Configuration
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/video_surveillance?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+
+gb28181:
+  sip:
+    ip: 127.0.0.1
+
+zlmediakit:
+  ip: 127.0.0.1
+
+logging:
+  level:
+    com.surveillance: DEBUG
